@@ -1,10 +1,25 @@
 import { Resend } from "resend";
 import { NextRequest, NextResponse } from "next/server";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resendApiKey = process.env.RESEND_API_KEY;
+
+if (!resendApiKey) {
+  console.error("RESEND_API_KEY is not set in environment variables");
+}
+
+const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if Resend is configured
+    if (!resend || !resendApiKey) {
+      console.error("Resend API key is not configured");
+      return NextResponse.json(
+        { error: "Email service is not configured. Please contact support." },
+        { status: 500 }
+      );
+    }
+
     const body = await request.json();
     const { name, email, device, country, found_us_via } = body;
 
@@ -43,8 +58,13 @@ export async function POST(request: NextRequest) {
     const safeSource = escapeHtml(found_us_via || "Not specified");
 
     // Send email using Resend
+    // Use onresend.com domain for free tier, or your verified domain
+    // If you've verified coffeedonuttv.com in Resend, you can use: "Coffee & Donut TV <noreply@coffeedonuttv.com>"
+    // For now, using onresend.com which works with free tier
+    const fromEmail = process.env.RESEND_FROM_EMAIL || "Coffee & Donut TV <onboarding@resend.dev>";
+    
     const { data, error } = await resend.emails.send({
-      from: "Coffee & Donut TV <noreply@coffeedonuttv.com>",
+      from: fromEmail,
       to: ["coffeedonuttv@gmail.com"],
       replyTo: email,
       subject: "New Free Trial Request - Coffee & Donut TV",
@@ -160,9 +180,12 @@ Please respond to this email to send credentials to the user.
     });
 
     if (error) {
-      console.error("Resend error:", error);
+      console.error("Resend error:", JSON.stringify(error, null, 2));
       return NextResponse.json(
-        { error: "Failed to send email" },
+        { 
+          error: "Failed to send email",
+          details: process.env.NODE_ENV === "development" ? error : undefined
+        },
         { status: 500 }
       );
     }
@@ -173,8 +196,12 @@ Please respond to this email to send credentials to the user.
     );
   } catch (error) {
     console.error("API error:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { error: "Internal server error" },
+      { 
+        error: "Internal server error",
+        details: process.env.NODE_ENV === "development" ? errorMessage : undefined
+      },
       { status: 500 }
     );
   }
