@@ -75,11 +75,13 @@ export async function POST(request: NextRequest) {
     console.log("From:", fromEmail);
     console.log("To: coffeedonuttv@gmail.com");
     
-    const result = await resend.emails.send({
-      from: fromEmail,
-      to: ["coffeedonuttv@gmail.com"],
-      replyTo: email,
-      subject: "New Free Trial Request - Coffee & Donut TV",
+    let result;
+    try {
+      result = await resend.emails.send({
+        from: fromEmail,
+        to: ["coffeedonuttv@gmail.com"],
+        replyTo: email,
+        subject: "New Free Trial Request - Coffee & Donut TV",
       html: `
         <!DOCTYPE html>
         <html>
@@ -189,20 +191,290 @@ Found Us Via: ${found_us_via || "Not specified"}
 This request was submitted from the Coffee & Donut TV website.
 Please respond to this email to send credentials to the user.
       `,
-    });
+      });
+    } catch (sendError) {
+      // If domain is not verified, try with default email
+      if (fromEmail.includes("@coffeedonuttv.com")) {
+        console.warn("Domain not verified, falling back to default sender");
+        fromEmail = "Coffee & Donut TV <onboarding@resend.dev>";
+        result = await resend.emails.send({
+          from: fromEmail,
+          to: ["coffeedonuttv@gmail.com"],
+          replyTo: email,
+          subject: "New Free Trial Request - Coffee & Donut TV",
+          html: `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <style>
+              body {
+                font-family: Arial, sans-serif;
+                line-height: 1.6;
+                color: #333;
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 20px;
+              }
+              .header {
+                background: linear-gradient(135deg, #E2955A 0%, #B8753D 100%);
+                color: white;
+                padding: 30px;
+                text-align: center;
+                border-radius: 10px 10px 0 0;
+              }
+              .content {
+                background: #f9f9f9;
+                padding: 30px;
+                border: 1px solid #ddd;
+                border-top: none;
+                border-radius: 0 0 10px 10px;
+              }
+              .field {
+                margin-bottom: 20px;
+                padding: 15px;
+                background: white;
+                border-radius: 5px;
+                border-left: 4px solid #E2955A;
+              }
+              .label {
+                font-weight: bold;
+                color: #E2955A;
+                display: block;
+                margin-bottom: 5px;
+                text-transform: uppercase;
+                font-size: 12px;
+                letter-spacing: 1px;
+              }
+              .value {
+                color: #333;
+                font-size: 16px;
+              }
+              .footer {
+                margin-top: 30px;
+                padding-top: 20px;
+                border-top: 1px solid #ddd;
+                text-align: center;
+                color: #666;
+                font-size: 12px;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h1>☕ New Free Trial Request</h1>
+              <p>Coffee & Donut TV</p>
+            </div>
+            <div class="content">
+              <div class="field">
+                <span class="label">Name</span>
+                <div class="value">${safeName}</div>
+              </div>
+              
+              <div class="field">
+                <span class="label">Email</span>
+                <div class="value">${safeEmail}</div>
+              </div>
+              
+              <div class="field">
+                <span class="label">Device</span>
+                <div class="value">${safeDeviceName}</div>
+              </div>
+              
+              <div class="field">
+                <span class="label">Country</span>
+                <div class="value">${safeCountry}</div>
+              </div>
+              
+              <div class="field">
+                <span class="label">Found Us Via</span>
+                <div class="value">${safeSource}</div>
+              </div>
+              
+              <div class="footer">
+                <p>This request was submitted from the Coffee & Donut TV website.</p>
+                <p>Please respond to this email to send credentials to the user.</p>
+              </div>
+            </div>
+          </body>
+        </html>
+      `,
+          text: `
+New Free Trial Request - Coffee & Donut TV
+
+Name: ${name}
+Email: ${email}
+Device: ${deviceName}
+Country: ${country || "Not specified"}
+Found Us Via: ${found_us_via || "Not specified"}
+
+This request was submitted from the Coffee & Donut TV website.
+Please respond to this email to send credentials to the user.
+      `,
+        });
+      } else {
+        throw sendError;
+      }
+    }
 
     console.log("Resend response:", JSON.stringify(result, null, 2));
 
     // Check for errors in the response
     if (result.error) {
       console.error("Resend error:", JSON.stringify(result.error, null, 2));
-      return NextResponse.json(
-        { 
-          error: "Failed to send email",
-          details: process.env.NODE_ENV === "development" ? result.error : undefined
-        },
-        { status: 500 }
-      );
+      
+      // If domain is not verified and we tried to use custom domain, fall back to default
+      const errorMessage = result.error.message || JSON.stringify(result.error);
+      if (errorMessage.includes("domain") || errorMessage.includes("not verified") || errorMessage.includes("unauthorized")) {
+        if (fromEmail.includes("@coffeedonuttv.com")) {
+          console.warn("Domain verification error detected, retrying with default sender");
+          // Retry with default sender
+          const fallbackResult = await resend.emails.send({
+            from: "Coffee & Donut TV <onboarding@resend.dev>",
+            to: ["coffeedonuttv@gmail.com"],
+            replyTo: email,
+            subject: "New Free Trial Request - Coffee & Donut TV",
+            html: `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <style>
+              body {
+                font-family: Arial, sans-serif;
+                line-height: 1.6;
+                color: #333;
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 20px;
+              }
+              .header {
+                background: linear-gradient(135deg, #E2955A 0%, #B8753D 100%);
+                color: white;
+                padding: 30px;
+                text-align: center;
+                border-radius: 10px 10px 0 0;
+              }
+              .content {
+                background: #f9f9f9;
+                padding: 30px;
+                border: 1px solid #ddd;
+                border-top: none;
+                border-radius: 0 0 10px 10px;
+              }
+              .field {
+                margin-bottom: 20px;
+                padding: 15px;
+                background: white;
+                border-radius: 5px;
+                border-left: 4px solid #E2955A;
+              }
+              .label {
+                font-weight: bold;
+                color: #E2955A;
+                display: block;
+                margin-bottom: 5px;
+                text-transform: uppercase;
+                font-size: 12px;
+                letter-spacing: 1px;
+              }
+              .value {
+                color: #333;
+                font-size: 16px;
+              }
+              .footer {
+                margin-top: 30px;
+                padding-top: 20px;
+                border-top: 1px solid #ddd;
+                text-align: center;
+                color: #666;
+                font-size: 12px;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h1>☕ New Free Trial Request</h1>
+              <p>Coffee & Donut TV</p>
+            </div>
+            <div class="content">
+              <div class="field">
+                <span class="label">Name</span>
+                <div class="value">${safeName}</div>
+              </div>
+              
+              <div class="field">
+                <span class="label">Email</span>
+                <div class="value">${safeEmail}</div>
+              </div>
+              
+              <div class="field">
+                <span class="label">Device</span>
+                <div class="value">${safeDeviceName}</div>
+              </div>
+              
+              <div class="field">
+                <span class="label">Country</span>
+                <div class="value">${safeCountry}</div>
+              </div>
+              
+              <div class="field">
+                <span class="label">Found Us Via</span>
+                <div class="value">${safeSource}</div>
+              </div>
+              
+              <div class="footer">
+                <p>This request was submitted from the Coffee & Donut TV website.</p>
+                <p>Please respond to this email to send credentials to the user.</p>
+              </div>
+            </div>
+          </body>
+        </html>
+      `,
+            text: `
+New Free Trial Request - Coffee & Donut TV
+
+Name: ${name}
+Email: ${email}
+Device: ${deviceName}
+Country: ${country || "Not specified"}
+Found Us Via: ${found_us_via || "Not specified"}
+
+This request was submitted from the Coffee & Donut TV website.
+Please respond to this email to send credentials to the user.
+      `,
+          });
+          
+          if (fallbackResult.error) {
+            return NextResponse.json(
+              { 
+                error: "Failed to send email",
+                details: process.env.NODE_ENV === "development" ? fallbackResult.error : undefined
+              },
+              { status: 500 }
+            );
+          }
+          
+          // Use fallback result
+          result = fallbackResult;
+        } else {
+          return NextResponse.json(
+            { 
+              error: "Failed to send email",
+              details: process.env.NODE_ENV === "development" ? result.error : undefined
+            },
+            { status: 500 }
+          );
+        }
+      } else {
+        return NextResponse.json(
+          { 
+            error: "Failed to send email",
+            details: process.env.NODE_ENV === "development" ? result.error : undefined
+          },
+          { status: 500 }
+        );
+      }
     }
 
     // Verify that data exists (email was actually sent)
