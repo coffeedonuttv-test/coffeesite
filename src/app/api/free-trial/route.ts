@@ -13,7 +13,9 @@ export async function POST(request: NextRequest) {
   try {
     // Check if Resend is configured
     if (!resend || !resendApiKey) {
-      console.error("Resend API key is not configured");
+      console.error("=== RESEND NOT CONFIGURED ===");
+      console.error("RESEND_API_KEY exists:", !!process.env.RESEND_API_KEY);
+      console.error("RESEND_API_KEY length:", process.env.RESEND_API_KEY?.length || 0);
       return NextResponse.json(
         { error: "Email service is not configured. Please contact support." },
         { status: 500 }
@@ -217,12 +219,19 @@ Please respond to this email to send credentials to the user.
       { status: 200 }
     );
   } catch (error) {
-    console.error("API error:", error);
+    console.error("=== API ERROR ===");
+    console.error("Error type:", error instanceof Error ? error.constructor.name : typeof error);
+    console.error("Error message:", error instanceof Error ? error.message : String(error));
+    console.error("Full error:", JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+    
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    
     return NextResponse.json(
       { 
         error: "Internal server error",
-        details: process.env.NODE_ENV === "development" ? errorMessage : undefined
+        message: errorMessage,
+        details: process.env.NODE_ENV === "development" ? { errorMessage, errorStack } : undefined
       },
       { status: 500 }
     );

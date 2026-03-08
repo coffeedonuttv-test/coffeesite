@@ -134,12 +134,16 @@ function FreeTrialContent() {
         }),
       });
 
+      const data = await response.json();
+      
       if (response.ok) {
         setFormState("success");
       } else {
+        console.error("API Error:", data);
         setFormState("error");
       }
-    } catch {
+    } catch (error) {
+      console.error("Network Error:", error);
       setFormState("error");
     }
   };
