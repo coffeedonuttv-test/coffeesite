@@ -63,7 +63,11 @@ export async function POST(request: NextRequest) {
     // For now, using onresend.com which works with free tier
     const fromEmail = process.env.RESEND_FROM_EMAIL || "Coffee & Donut TV <onboarding@resend.dev>";
     
-    const { data, error } = await resend.emails.send({
+    console.log("Attempting to send email with Resend...");
+    console.log("From:", fromEmail);
+    console.log("To: coffeedonuttv@gmail.com");
+    
+    const result = await resend.emails.send({
       from: fromEmail,
       to: ["coffeedonuttv@gmail.com"],
       replyTo: email,
@@ -179,19 +183,36 @@ Please respond to this email to send credentials to the user.
       `,
     });
 
-    if (error) {
-      console.error("Resend error:", JSON.stringify(error, null, 2));
+    console.log("Resend response:", JSON.stringify(result, null, 2));
+
+    // Check for errors in the response
+    if (result.error) {
+      console.error("Resend error:", JSON.stringify(result.error, null, 2));
       return NextResponse.json(
         { 
           error: "Failed to send email",
-          details: process.env.NODE_ENV === "development" ? error : undefined
+          details: process.env.NODE_ENV === "development" ? result.error : undefined
         },
         { status: 500 }
       );
     }
 
+    // Verify that data exists (email was actually sent)
+    if (!result.data || !result.data.id) {
+      console.error("Resend returned success but no email ID:", result);
+      return NextResponse.json(
+        { 
+          error: "Email service returned unexpected response",
+          details: process.env.NODE_ENV === "development" ? result : undefined
+        },
+        { status: 500 }
+      );
+    }
+
+    console.log("Email sent successfully! Email ID:", result.data.id);
+
     return NextResponse.json(
-      { success: true, message: "Email sent successfully" },
+      { success: true, message: "Email sent successfully", emailId: result.data.id },
       { status: 200 }
     );
   } catch (error) {
