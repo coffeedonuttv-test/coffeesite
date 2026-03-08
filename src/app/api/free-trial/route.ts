@@ -58,10 +58,18 @@ export async function POST(request: NextRequest) {
     const safeSource = escapeHtml(found_us_via || "Not specified");
 
     // Send email using Resend
-    // Use onresend.com domain for free tier, or your verified domain
-    // If you've verified coffeedonuttv.com in Resend, you can use: "Coffee & Donut TV <noreply@coffeedonuttv.com>"
-    // For now, using onresend.com which works with free tier
-    const fromEmail = process.env.RESEND_FROM_EMAIL || "Coffee & Donut TV <onboarding@resend.dev>";
+    // IMPORTANT: For better deliverability, verify your domain in Resend
+    // Go to https://resend.com/domains and add coffeedonuttv.com
+    // Then set RESEND_FROM_EMAIL to: "Coffee & Donut TV <noreply@coffeedonuttv.com>"
+    // If domain is not verified, Resend will reject it - so we fall back to default
+    let fromEmail = process.env.RESEND_FROM_EMAIL || "Coffee & Donut TV <onboarding@resend.dev>";
+    
+    // Validate email format
+    const emailRegex = /^[^<]+<[^>]+>$/;
+    if (process.env.RESEND_FROM_EMAIL && !emailRegex.test(process.env.RESEND_FROM_EMAIL)) {
+      console.warn("Invalid RESEND_FROM_EMAIL format, using default");
+      fromEmail = "Coffee & Donut TV <onboarding@resend.dev>";
+    }
     
     console.log("Attempting to send email with Resend...");
     console.log("From:", fromEmail);
