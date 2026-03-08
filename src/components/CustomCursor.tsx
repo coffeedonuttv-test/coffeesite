@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion, useSpring, useMotionValue } from "framer-motion";
 
 export function CustomCursor() {
@@ -77,21 +77,21 @@ export function CustomCursor() {
       height: 32,
       backgroundColor: "transparent",
       border: "2px solid rgba(180, 130, 80, 0.5)",
-      mixBlendMode: "normal" as any,
+      mixBlendMode: "normal" as React.CSSProperties["mixBlendMode"],
     },
     hover: {
       width: 60,
       height: 60,
       backgroundColor: "rgba(180, 130, 80, 0.1)",
       border: "2px solid hsl(30, 60%, 55%)",
-      mixBlendMode: "normal" as any,
+      mixBlendMode: "normal" as React.CSSProperties["mixBlendMode"],
     },
     text: {
       width: 120, // Massive expansion for the magnifying effect
       height: 120,
       backgroundColor: "rgba(255, 255, 255, 1)", // Pure white...
       border: "none",
-      mixBlendMode: "difference" as any, // ...becomes an inverter lens via difference mode
+      mixBlendMode: "difference" as React.CSSProperties["mixBlendMode"], // ...becomes an inverter lens via difference mode
     },
   };
 
