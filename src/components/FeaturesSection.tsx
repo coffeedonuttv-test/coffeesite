@@ -18,12 +18,12 @@ const drawVariants: Variants = {
   }
 };
 
-const fillVariants = {
+const fillVariants: Variants = {
   hidden: { opacity: 0, scale: 0 },
   visible: { 
     opacity: 1, 
     scale: 1, 
-    transition: { duration: 0.8, ease: "easeOut", delay: 1.2 } 
+    transition: { duration: 0.8, ease: "easeOut" as const, delay: 1.2 } 
   }
 };
 
