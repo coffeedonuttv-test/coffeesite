@@ -311,7 +311,17 @@
 }
 
 /* Hide common third-party floating widgets/toolbars */
-/* These will be handled by JavaScript for better compatibility */
+/* Target elements with multiple buttons/icons that match widget pattern */
+div:not([class*="coffee"]):not([class*="donut"]):not([class*="toast"]):not([class*="cursor"]):not([class*="header"]) {
+  /* This will be handled by JavaScript, but add fallback CSS */
+}
+
+/* Hide iframes from widgets */
+iframe[src*="widget"],
+iframe[src*="grab"],
+iframe[src*="runtime"] {
+  display: none !important;
+}
 
 /* Hide common widget patterns - be more specific to avoid breaking site elements */
 iframe[src*="widget"],
