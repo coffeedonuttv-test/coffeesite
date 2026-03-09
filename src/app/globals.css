@@ -309,3 +309,23 @@
 .reveal-section.revealed {
   clip-path: inset(0 0 0 0);
 }
+
+/* Hide common third-party floating widgets/toolbars */
+/* This targets floating icon boxes that appear above content */
+div[style*="position: fixed"][style*="bottom"]:has(> *[class*="icon"]):has(> *[class*="button"]):not([class*="coffee"]):not([class*="donut"]):not([class*="toast"]):not([class*="cursor"]) {
+  display: none !important;
+}
+
+/* Hide common widget patterns - be more specific to avoid breaking site elements */
+iframe[src*="widget"],
+iframe[src*="chat"],
+iframe[src*="accessibility"] {
+  display: none !important;
+}
+
+/* Hide elements with specific widget data attributes */
+[data-widget="true"],
+[data-toolbar="true"],
+[data-chat="true"] {
+  display: none !important;
+}
