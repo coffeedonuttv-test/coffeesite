@@ -1,13 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // 1. These lines tell Vercel to ignore tiny errors so it can deploy
   typescript: {
     ignoreBuildErrors: true,
   },
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // 2. This keeps your images working (from your original file)
   allowedDevOrigins: ["*.preview.same-app.com"],
   images: {
     unoptimized: true,

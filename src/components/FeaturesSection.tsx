@@ -1,11 +1,11 @@
 "use client";
 
-import { motion, useInView, useScroll, useTransform, useMotionValue, useMotionTemplate } from "framer-motion";
+import { motion, useInView, useScroll, useTransform, useMotionValue, useMotionTemplate, type Variants } from "framer-motion";
 import { useRef, type MouseEvent } from "react";
 import { AnimatedText, AnimatedParagraph } from "./AnimatedText";
 
 // --- AWWWARDS UPGRADE 1: Animated SVG Paths ---
-const drawVariants = {
+const drawVariants: Variants = {
   hidden: { pathLength: 0, opacity: 0 },
   visible: { 
     pathLength: 1, 
@@ -14,7 +14,7 @@ const drawVariants = {
   }
 };
 
-const fillVariants = {
+const fillVariants: Variants = {
   hidden: { opacity: 0, scale: 0 },
   visible: { 
     opacity: 1, 
